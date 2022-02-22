@@ -1,5 +1,9 @@
 # welford
 
+[![Crates.io](https://img.shields.io/crates/v/welford)](https://crates.io/crates/welford)
+[![docs.rs](https://img.shields.io/docsrs/welford)](https://docs.rs/welford)
+[![Crates.io](https://img.shields.io/crates/l/welford)](https://github.com/schneiderfelipe/welford/blob/main/LICENSE)
+
 Online algorithm for mean and variance, with support for uneven weights.
 
 This implements the [Welford's online algorithm][welford-wiki] for
