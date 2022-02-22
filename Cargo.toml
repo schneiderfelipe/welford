@@ -6,6 +6,7 @@ description = "Online algorithm for mean and variance, with support for uneven w
 license = "MIT"
 repository = "https://github.com/schneiderfelipe/welford"
 homepage = "https://github.com/schneiderfelipe/welford"
+documentation = "https://docs.rs/welford"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

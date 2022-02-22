@@ -1,10 +1,25 @@
 use num_traits::{cast, Num, NumAssign, NumCast, Zero};
 
-/// An·online·calculator·for·both·mean·and·variance.
+/// Online algorithm for mean and variance, with support for uneven weights.
 ///
-/// References:
-/// - https://doi.org/10.1080/00401706.1962.10490022
-/// - https://stats.stackexchange.com/a/235151/146964
+/// This implements the [Welford's online algorithm][welford-wiki] for
+/// computing mean and variance in a single pass.
+/// The initial implementation was based on [this StackOverflow
+/// answer](https://stats.stackexchange.com/a/235151/146964) by
+/// [Tim](https://stats.stackexchange.com/users/35989/tim).
+///
+/// Weights are treated as suggested by [West][west-wiki]. The implementation uses
+/// weights as [frequencies instead of reliabilities][weighted-variance] for
+/// the calculation of variances.
+///
+/// [welford-wiki]: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
+/// [west-wiki]: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
+/// [weighted-variance]: https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance
+///
+/// ## References
+///
+/// - [Welford, B. P. 1962. Technometrics 4 (3): 419–20.](https://doi.org/10.1080/00401706.1962.10490022)
+/// - [West, D. H. D. 1979. Communications of the ACM 22 (9): 532–35.](https://doi.org/10.1145/359146.359153)
 pub struct Welford<T, W = usize> {
     mean: Option<T>,
     total: W,
@@ -15,7 +30,13 @@ impl<T> Welford<T>
 where
     T: Zero,
 {
-    /// Create a new unweighted Welford calculator.
+    /// Create a new *unweighted* Welford calculator.
+    ///
+    /// # Examples
+    /// ```
+    /// use welford::Welford;
+    /// let mut w = Welford::<f32>::new();
+    /// ```
     pub fn new() -> Self {
         Self {
             mean: None,
@@ -29,6 +50,13 @@ impl<T> Default for Welford<T>
 where
     T: Zero,
 {
+    /// Alias for `Welford::new()`.
+    ///
+    /// # Examples
+    /// ```
+    /// use welford::Welford;
+    /// let w = Welford::<f32>::default();
+    /// ```
     fn default() -> Self {
         Self::new()
     }
@@ -38,6 +66,16 @@ impl<T> Welford<T>
 where
     T: Copy + Num + NumAssign + NumCast,
 {
+    /// Add a new sample to the calculator.
+    ///
+    /// The weight is assumed to be unity.
+    ///
+    /// # Examples
+    /// ```
+    /// # use welford::Welford;
+    /// let mut w = Welford::new();
+    /// w.push(1.0);
+    /// ```
     pub fn push(&mut self, value: T) {
         self.push_weighted(value, 1)
     }
@@ -48,7 +86,13 @@ where
     T: Zero,
     W: Zero,
 {
-    /// Create a new weighted Welford calculator.
+    /// Create a new *weighted* Welford calculator.
+    ///
+    /// # Examples
+    /// ```
+    /// use welford::Welford;
+    /// let mut w = Welford::<f32>::with_weights();
+    /// ```
     pub fn with_weights() -> Self {
         Self {
             mean: None,
@@ -63,6 +107,14 @@ where
     T: Copy + Num + NumAssign + NumCast,
     W: Copy + Num + NumAssign + NumCast + PartialOrd,
 {
+    /// Add a new sample to the calculator with a given weight.
+    ///
+    /// # Examples
+    /// ```
+    /// # use welford::Welford;
+    /// let mut w = Welford::with_weights();
+    /// w.push_weighted(1.0, 2);
+    /// ```
     pub fn push_weighted(&mut self, value: T, weight: W) {
         self.total += weight;
 
@@ -82,15 +134,26 @@ where
         self.msq += weighted_delta * delta2;
     }
 
-    /// Mean.
+    /// Get the mean of the samples so far.
+    ///
+    /// # Examples
+    /// ```
+    /// # use welford::Welford;
+    /// let mut w = Welford::new();
+    /// w.push(1.0);
+    /// w.push(2.0);
+    /// assert_eq!(w.mean(), Some(1.5));
+    /// ```
     pub fn mean(&self) -> Option<T> {
         self.mean
     }
 
-    /// Sample (frequency) variance.
+    /// Get the variance of the samples so far.
     ///
-    /// References:
-    /// - https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance
+    /// Weights are treated as
+    /// [frequencies instead of reliabilities][weighted-variance].
+    ///
+    /// [weighted-variance]: https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance
     pub fn var(&self) -> Option<T> {
         if self.total > W::one() {
             let total: T = cast(self.total).expect("failed to cast W to T");
@@ -100,7 +163,21 @@ where
         }
     }
 
-    fn merge(&mut self, other: Self) {
+    /// Merge the contents of another Welford calculator into this one.
+    ///
+    /// # Examples
+    /// ```
+    /// # use welford::Welford;
+    /// let mut w1 = Welford::new();
+    /// w1.push(1.0f32);
+    /// w1.push(2.0);
+    /// let mut w2 = Welford::new();
+    /// w2.push(3.0f32);
+    /// w2.push(4.0);
+    /// w1.merge(w2);
+    /// assert_eq!(w1.mean(), Some(2.5));
+    /// ```
+    pub fn merge(&mut self, other: Self) {
         let weight = other.total;
 
         if weight == W::zero() {
