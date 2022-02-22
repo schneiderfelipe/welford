@@ -87,7 +87,10 @@ where
         self.mean
     }
 
-    /// Sample variance.
+    /// Sample (frequency) variance.
+    ///
+    /// References:
+    /// - https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance
     pub fn var(&self) -> Option<T> {
         if self.total > W::one() {
             let total: T = cast(self.total).expect("failed to cast W to T");
