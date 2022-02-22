@@ -1,6 +1,6 @@
 # welford
 
-Online algorithms for mean and variance, with support for weighted samplings.
+Online algorithm for mean and variance, with support for uneven weights.
 
 See
 [algorithms for calculating variance](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance).
