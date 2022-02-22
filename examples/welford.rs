@@ -5,7 +5,7 @@ use std::{
 use welford::Welford;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut w = Welford::new();
+    let mut w = Welford::<f32>::new();
 
     while let Ok(value) = {
         print!("Please enter a real number (anything else to quit): ");
@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         let mut buffer = String::new();
         stdin().read_line(&mut buffer)?;
-        buffer.trim().parse::<f64>()
+        buffer.trim().parse()
     } {
         w.push(value);
     }
