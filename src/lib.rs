@@ -73,12 +73,13 @@ where
         // self.mean is Some(T) from here on.
         let delta = value - self.mean.unwrap();
 
-        let weight: T = cast(weight).expect("failed to cast W to T");
         let total = cast(self.total).expect("failed to cast W to T");
-        *self.mean.as_mut().unwrap() += weight * delta / total;
+        let weighted_delta = delta * cast(weight).expect("failed to cast W to T");
+
+        *self.mean.as_mut().unwrap() += weighted_delta / total;
 
         let delta2 = value - self.mean.unwrap();
-        self.msq += weight * delta * delta2;
+        self.msq += weighted_delta * delta2;
     }
 
     /// Mean.
@@ -94,6 +95,32 @@ where
         } else {
             None
         }
+    }
+
+    fn merge(&mut self, other: Self) {
+        let weight = other.total;
+
+        if weight == W::zero() {
+            return;
+        } else if self.total == W::zero() {
+            *self = other;
+            return;
+        }
+
+        // self.mean is Some(T) from here on since totals have been updated.
+        // WARN: Probably unstable, see <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm>.
+        let delta = other.mean.unwrap() - self.mean.unwrap();
+
+        let total = self.total + weight;
+        let weighted_delta = delta * cast(weight).expect("failed to cast W to T");
+
+        let mean_corr = weighted_delta / cast(total).expect("failed to cast W to T");
+        *self.mean.as_mut().unwrap() += mean_corr;
+
+        self.msq +=
+            other.msq + delta * cast(self.total).expect("failed to cast W to T") * mean_corr;
+
+        self.total = total;
     }
 }
 
@@ -137,5 +164,45 @@ mod tests {
         w.push_weighted(5.0, 1.0);
         assert_eq!(w.mean(), Some(2.3333333333333335));
         assert_eq!(w.var(), Some(2.6666666666666665));
+    }
+
+    #[test]
+    fn test_merge() {
+        let mut w1 = Welford::new();
+        let mut w2 = Welford::new();
+
+        w1.push(1.0);
+        w1.push(3.0);
+        w1.push(5.0);
+        w1.push(7.0);
+
+        w2.push(2.0);
+        w2.push(4.0);
+        w2.push(6.0);
+        w2.push(8.0);
+
+        w1.merge(w2);
+        assert_eq!(w1.mean(), Some(4.5));
+        assert_eq!(w1.var(), Some(6.0));
+    }
+
+    #[test]
+    fn test_weighted_merge() {
+        let mut w1 = Welford::with_weights();
+        let mut w2 = Welford::with_weights();
+
+        w1.push_weighted(1.0, 4.0);
+        w1.push_weighted(3.0, 3.0);
+        w1.push_weighted(5.0, 2.0);
+        w1.push_weighted(7.0, 1.0);
+
+        w2.push_weighted(2.0, 4.0);
+        w2.push_weighted(4.0, 3.0);
+        w2.push_weighted(6.0, 2.0);
+        w2.push_weighted(8.0, 1.0);
+
+        w1.merge(w2);
+        assert_eq!(w1.mean(), Some(3.5));
+        assert_eq!(w1.var(), Some(4.473684210526316));
     }
 }
