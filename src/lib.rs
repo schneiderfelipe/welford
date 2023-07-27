@@ -24,6 +24,7 @@ use num_traits::Zero;
 ///
 /// - [Welford, B. P. 1962. Technometrics 4 (3): 419–20.](https://doi.org/10.1080/00401706.1962.10490022)
 /// - [West, D. H. D. 1979. Communications of the ACM 22 (9): 532–35.](https://doi.org/10.1145/359146.359153)
+#[derive(Clone, Copy, Debug)]
 pub struct Welford<T, W = usize> {
     mean: Option<T>,
     total: W,
