@@ -1,4 +1,8 @@
-use num_traits::{cast, Num, NumAssign, NumCast, Zero};
+use num_traits::cast;
+use num_traits::Num;
+use num_traits::NumAssign;
+use num_traits::NumCast;
+use num_traits::Zero;
 
 /// Online algorithm for mean and variance, with support for uneven weights.
 ///
@@ -8,9 +12,9 @@ use num_traits::{cast, Num, NumAssign, NumCast, Zero};
 /// answer](https://stats.stackexchange.com/a/235151/146964) by
 /// [Tim](https://stats.stackexchange.com/users/35989/tim).
 ///
-/// Weights are treated as suggested by [West][west-wiki]. The implementation uses
-/// weights as [frequencies instead of reliabilities][weighted-variance] for
-/// the calculation of variances.
+/// Weights are treated as suggested by [West][west-wiki]. The implementation
+/// uses weights as [frequencies instead of reliabilities][weighted-variance]
+/// for the calculation of variances.
 ///
 /// [welford-wiki]: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
 /// [west-wiki]: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
@@ -242,8 +246,8 @@ mod tests {
         assert_eq!(w.var(), Some(1.2));
 
         w.push_weighted(5.0, 1.0);
-        assert_eq!(w.mean(), Some(2.3333333333333335));
-        assert_eq!(w.var(), Some(2.6666666666666665));
+        assert_eq!(w.mean(), Some(2.333_333_333_333_333_5));
+        assert_eq!(w.var(), Some(2.666_666_666_666_666_5));
     }
 
     #[test]
@@ -283,6 +287,6 @@ mod tests {
 
         w1.merge(w2);
         assert_eq!(w1.mean(), Some(3.5));
-        assert_eq!(w1.var(), Some(4.473684210526316));
+        assert_eq!(w1.var(), Some(4.473_684_210_526_316));
     }
 }
