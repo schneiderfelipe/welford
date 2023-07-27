@@ -1,7 +1,8 @@
-use std::{
-    error::Error,
-    io::{stdin, stdout, Write},
-};
+use std::error::Error;
+use std::io::stdin;
+use std::io::stdout;
+use std::io::Write;
+
 use welford::Welford;
 
 fn main() -> Result<(), Box<dyn Error>> {
