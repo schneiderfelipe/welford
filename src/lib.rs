@@ -42,6 +42,7 @@ where
     /// use welford::Welford;
     /// let mut w = Welford::<f32>::new();
     /// ```
+    #[must_use]
     pub fn new() -> Self {
         Self {
             mean: None,
@@ -98,6 +99,7 @@ where
     /// use welford::Welford;
     /// let mut w = Welford::<f32>::with_weights();
     /// ```
+    #[must_use]
     pub fn with_weights() -> Self {
         Self {
             mean: None,
